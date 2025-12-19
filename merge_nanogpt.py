@@ -33,6 +33,8 @@ DEFAULT_CAPABILITIES = {
     "usage": True,
 }
 
+NANO_GPT_ICON_BASE_URL = "https://nano-gpt.com"
+
 
 def fetch_nano_gpt_data():
     response = requests.get(NANO_GPT_API_URL)
@@ -77,9 +79,15 @@ def enrich_models(local_models, nano_models, system_prompt):
             model["meta"]["description"] = nano_model.get(
                 "description", "No description available"
             )
-            model["meta"]["profile_image_url"] = (
-                nano_model.get("profile_image") or "/static/favicon.png"
-            )
+
+            profile_image_url = "/static/favicon.png"
+
+            icon_url = nano_model.get("icon_url")
+
+            if icon_url:
+                profile_image_url = NANO_GPT_ICON_BASE_URL + icon_url
+
+            model["meta"]["profile_image_url"] = profile_image_url
 
             context_size = nano_model.get("context_length") or 4096
             model["params"] = model.get("params", {})

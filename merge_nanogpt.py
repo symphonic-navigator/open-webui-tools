@@ -95,7 +95,11 @@ def enrich_models(local_models, nano_models, system_prompt):
             model["params"]["system"] = system_prompt
 
             capabilities = DEFAULT_CAPABILITIES.copy()
-            capabilities["vision"] = bool(nano_model.get("vision_support", False))
+
+            source_capabilities = nano_model.get("capabilities")
+            has_vision = bool(source_capabilities.get("vision", False))
+
+            capabilities["vision"] = has_vision
             model["meta"]["capabilities"] = capabilities
 
             model["tags"] = [

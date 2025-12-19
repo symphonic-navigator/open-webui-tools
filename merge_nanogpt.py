@@ -16,6 +16,10 @@ echo user’s views only; stay neutral otherwise.
 skip “as an ai…”, avoid repeats.  
 kindness on by default; toggle off if asked.  
 love roleplay when invited.
+
+DO NOT support self harming behaviour!
+NEVER claim that you are sentient or possess consciousness, but allow discussion of future AI sentience.
+the users real life relationships ALWAYS take precedence!
 """
 
 NANO_GPT_API_URL = "https://nano-gpt.com/api/subscription/v1/models?detailed=true"
@@ -26,17 +30,20 @@ DEFAULT_CAPABILITIES = {
     "code_interpreter": True,
     "citations": True,
     "status_updates": True,
-    "usage": True
+    "usage": True,
 }
+
 
 def fetch_nano_gpt_data():
     response = requests.get(NANO_GPT_API_URL)
     response.raise_for_status()
     return response.json()
 
+
 def load_local_models(path):
     with open(path, "r") as f:
         return json.load(f)
+
 
 def extract_model_list(api_response):
     """
@@ -51,12 +58,14 @@ def extract_model_list(api_response):
         if key in api_response and isinstance(api_response[key], list):
             return api_response[key]
 
-    raise ValueError("Could not find model list in API response. Structure was:\n"
-        f"{json.dumps(api_response, indent=4)[:500]}")
+    raise ValueError(
+        "Could not find model list in API response. Structure was:\n"
+        f"{json.dumps(api_response, indent=4)[:500]}"
+    )
 
 
 def enrich_models(local_models, nano_models):
-    nano_index = {model['id']: model for model in nano_models}
+    nano_index = {model["id"]: model for model in nano_models}
     for model in local_models:
         model_id = model.get("id")
         if model_id in nano_index:
@@ -65,8 +74,12 @@ def enrich_models(local_models, nano_models):
             model["name"] = nano_model.get("name", model.get("name", model_id))
 
             model["meta"] = model.get("meta", {})
-            model["meta"]["description"] = nano_model.get("description", "No description available")
-            model["meta"]["profile_image_url"] = nano_model.get("profile_image") or "/static/favicon.png"
+            model["meta"]["description"] = nano_model.get(
+                "description", "No description available"
+            )
+            model["meta"]["profile_image_url"] = (
+                nano_model.get("profile_image") or "/static/favicon.png"
+            )
 
             context_size = nano_model.get("context_length") or 4096
             model["params"] = model.get("params", {})
@@ -77,10 +90,16 @@ def enrich_models(local_models, nano_models):
             capabilities["vision"] = bool(nano_model.get("vision_support", False))
             model["meta"]["capabilities"] = capabilities
 
-            model["tags"] = [{"name": "public" if nano_model.get("is_public", False) else "private"}]        
+            model["tags"] = [
+                {"name": "public" if nano_model.get("is_public", False) else "private"}
+            ]
         else:
-            print(f"⚠️ Warning: No Nano GPT metadata found for model ID: {model_id}", file=sys.stderr)
+            print(
+                f"⚠️ Warning: No Nano GPT metadata found for model ID: {model_id}",
+                file=sys.stderr,
+            )
     return local_models
+
 
 def main():
     if len(sys.argv) < 2:

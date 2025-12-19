@@ -64,7 +64,7 @@ def extract_model_list(api_response):
     )
 
 
-def enrich_models(local_models, nano_models):
+def enrich_models(local_models, nano_models, system_prompt):
     nano_index = {model["id"]: model for model in nano_models}
     for model in local_models:
         model_id = model.get("id")
@@ -84,7 +84,7 @@ def enrich_models(local_models, nano_models):
             context_size = nano_model.get("context_length") or 4096
             model["params"] = model.get("params", {})
             model["params"]["num_ctx"] = context_size
-            model["params"]["system"] = SYSTEM_PROMPT
+            model["params"]["system"] = system_prompt
 
             capabilities = DEFAULT_CAPABILITIES.copy()
             capabilities["vision"] = bool(nano_model.get("vision_support", False))
@@ -102,6 +102,9 @@ def enrich_models(local_models, nano_models):
 
 
 def main():
+    with open("systemprompt.txt", "r") as f:
+        system_prompt = f.read()
+
     if len(sys.argv) < 2:
         print("Usage: merge_models.py <models.json>", file=sys.stderr)
         sys.exit(1)
@@ -111,7 +114,7 @@ def main():
     api_response = fetch_nano_gpt_data()
     nano_models = extract_model_list(api_response)
 
-    merged_models = enrich_models(local_models, nano_models)
+    merged_models = enrich_models(local_models, nano_models, system_prompt)
     print(json.dumps(merged_models, indent=4))
 
 
